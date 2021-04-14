@@ -1,0 +1,13 @@
+variable rds_credentials {
+  type    = object({
+    username = string
+    password = string
+  })
+
+  default = {
+    username = "<username>"
+    password = "<password>"
+  }
+  
+  description = "Master DB username and password for RDS"
+}
