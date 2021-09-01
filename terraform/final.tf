@@ -8,6 +8,24 @@ module "myip" {
   version = "1.0.0"
 }
 
+data "template_file" "user_data" {
+  template = file("./install.sh")
+}
+
+resource "aws_instance" "for_ami" {
+  ami           = "ami-0d26eb3972b7f8c96"
+  instance_type = "t2.micro"
+  user_data = data.template_file.user_data.rendered
+  tags = {
+    Name = "Delete_me"
+  }
+}
+
+resource "aws_ami_from_instance" "apache_php" {
+  name               = "apache_php"
+  source_instance_id = aws_instance.for_ami.id
+}
+
 resource "aws_vpc" "myvpc" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_hostnames = true
@@ -215,7 +233,7 @@ resource "aws_db_instance" "mysql" {
 
 resource "aws_launch_configuration" "my_conf" {
   name_prefix                 = "My Launch Config with WP"
-  image_id                    = var.image
+  image_id                    = aws_ami_from_instance.apache_php.id
   instance_type               = "t2.micro"
   key_name                    = "Test_key"
   security_groups             = [aws_security_group.SG_for_EC2.id]
@@ -229,7 +247,7 @@ resource "aws_launch_configuration" "my_conf" {
 #!/bin/bash
 sudo mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport ${aws_efs_file_system.myefs.dns_name}:/ /var/www/html
 EOF
-  depends_on = [aws_security_group.SG_for_EC2]
+  depends_on = [aws_security_group.SG_for_EC2, aws_ami_from_instance.apache_php]
 }
 
 resource "aws_autoscaling_group" "my_asg" {
@@ -288,7 +306,8 @@ data "aws_instances" "my_inst" {
 
   filter {
     name   = "image-id"
-    values = [var.image]
+    #values = [var.image]
+    values = [aws_ami_from_instance.apache_php.id]
   }
   depends_on = [aws_autoscaling_group.my_asg]
 }

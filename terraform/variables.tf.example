@@ -13,8 +13,3 @@ variable rds_credentials {
   
   description = "Master DB username, password and dbname for RDS"
 }
-
-variable "image" {
-  default = "<your_AMI_ID>"
-  description = "AMI ID with preinstalled Apache server"
-}
