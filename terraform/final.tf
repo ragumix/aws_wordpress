@@ -306,7 +306,6 @@ data "aws_instances" "my_inst" {
 
   filter {
     name   = "image-id"
-    #values = [var.image]
     values = [aws_ami_from_instance.apache_php.id]
   }
   depends_on = [aws_autoscaling_group.my_asg]
